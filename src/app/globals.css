@@ -1,26 +1,158 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #090909;
+  --foreground: #f8f1e7;
+  --color-background: #090909;
+  --color-foreground: #f8f1e7;
+  --color-surface: rgba(17, 16, 18, 0.74);
+  --color-surface-strong: rgba(9, 9, 9, 0.86);
+  --color-text-primary: #f8f1e7;
+  --color-text-muted: #ccc1b2;
+  --color-text-soft: #9f9486;
+  --color-border: rgba(255, 248, 237, 0.08);
+  --color-border-strong: rgba(239, 219, 184, 0.24);
+  --color-accent: #d9b77c;
+  --color-accent-strong: #c49f63;
+  --color-accent-soft: #f2dfbf;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgba(255, 248, 237, 0.06), transparent 22%),
+    radial-gradient(circle at top right, rgba(196, 159, 99, 0.12), transparent 28%),
+    linear-gradient(180deg, #0b0b0c 0%, #090909 100%);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at top left, rgba(255, 248, 237, 0.05), transparent 24%),
+    radial-gradient(circle at top right, rgba(196, 159, 99, 0.1), transparent 30%),
+    linear-gradient(180deg, #0a0a0b 0%, #080808 100%);
+  text-wrap: pretty;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(217, 183, 124, 0.32);
+  color: var(--color-text-primary);
+}
+
+.luxury-panel {
+  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(17, 16, 18, 0.72), rgba(11, 11, 13, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 80px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(20px);
+}
+
+.luxury-photo-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 248, 237, 0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 22px 60px rgba(0, 0, 0, 0.24);
+}
+
+.luxury-photo-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 22%, transparent 72%, rgba(255, 255, 255, 0.06)),
+    linear-gradient(180deg, rgba(8, 8, 10, 0.02), rgba(8, 8, 10, 0.58));
+}
+
+.luxury-numeric {
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -0.035em;
+  text-shadow: 0 10px 32px rgba(0, 0, 0, 0.32);
+}
+
+.luxury-grid {
+  position: relative;
+  overflow: hidden;
+}
+
+.luxury-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 120px 120px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.22), transparent 84%);
+}
+
+.luxury-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.luxury-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: -180% auto auto -40%;
+  width: 42%;
+  height: 320%;
+  transform: rotate(18deg);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.11) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0.55;
+  animation: luxury-shimmer-pass 8s ease-in-out infinite;
+}
+
+@keyframes luxury-shimmer-pass {
+  0%,
+  100% {
+    transform: translateX(-120%) rotate(18deg);
+  }
+  46%,
+  54% {
+    transform: translateX(380%) rotate(18deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .luxury-shimmer::after {
+    animation: none;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
