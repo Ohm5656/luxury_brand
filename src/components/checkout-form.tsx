@@ -186,7 +186,8 @@ export function CheckoutForm() {
                 <h3 className="font-serif text-2xl text-[var(--color-text-primary)] sm:text-3xl">
                   Suggested additions
                 </h3>
-                <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-3">
+                <div className="mt-5 grid grid-cols-1 gap-4 sm:mt-6 sm:grid-cols-2 sm:gap-6">
+
                   {suggestions.map((product) => (
                     <ProductCard key={product.slug} product={product} />
                   ))}

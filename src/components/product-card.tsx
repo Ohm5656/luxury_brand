@@ -14,6 +14,7 @@ export function ProductCard({
   priority?: boolean;
 }) {
   const shouldReduceMotion = useReducedMotion();
+  const flightSourceId = `flight-source-${product.slug}`;
 
   return (
     <motion.article
@@ -29,7 +30,10 @@ export function ProductCard({
         href={`/product/${product.slug}`}
         aria-label={`View ${product.name}`}
       >
-        <div className="luxury-photo-frame relative aspect-[1.04] overflow-hidden border-b border-white/10 sm:aspect-[0.92] xl:aspect-[0.84]">
+        <div
+          className="luxury-photo-frame relative aspect-[1.04] overflow-hidden border-b border-white/10 sm:aspect-[0.92] xl:aspect-[0.84]"
+          id={flightSourceId}
+        >
           <Image
             alt={product.headline}
             className="object-cover transition duration-700 group-hover:scale-[1.04]"
@@ -78,7 +82,13 @@ export function ProductCard({
         </div>
 
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-          <AddToCartButton className="flex-1" label="Add to bag" slug={product.slug} />
+          <AddToCartButton
+            className="flex-1"
+            flightImageSrc={product.heroImage}
+            flightSourceId={flightSourceId}
+            label="Add to bag"
+            slug={product.slug}
+          />
           <Link
             className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-white/10 px-5 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition hover:border-[var(--color-border-strong)] hover:bg-white/6"
             href={`/product/${product.slug}`}

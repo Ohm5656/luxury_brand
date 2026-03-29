@@ -74,11 +74,11 @@ export function WatchStorefront() {
           <Reveal delay={0.1}>
             <div className="luxury-panel luxury-grid overflow-hidden rounded-[1.7rem] p-3 sm:rounded-[2rem] sm:p-5 shadow-[0_30px_100px_rgba(0,0,0,0.42)]">
               <div className="grid gap-3 sm:gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-                <Lift className="luxury-photo-frame rounded-[1.35rem] sm:rounded-[1.6rem]">
-                  <div className="relative aspect-[0.92] sm:aspect-[0.98] lg:min-h-[28rem]">
+                <Lift className="luxury-photo-frame h-full rounded-[1.35rem] sm:rounded-[1.6rem]">
+                  <div className="relative min-h-[24rem] sm:min-h-[30rem] lg:h-full lg:min-h-0">
                     <Image
                       alt="Luxury watch editorial hero"
-                      className="object-cover"
+                      className="object-cover object-[48%_34%] scale-[1.06]"
                       fill
                       priority
                       sizes="(max-width: 1024px) 100vw, 40vw"

@@ -6,7 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import {
   cartStorageKey,
@@ -43,17 +43,40 @@ type CartContextValue = {
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
+const cartStoreEvent = "aureline-cart-change";
+const emptyCartItems: CartItem[] = [];
+
+let currentCartItems: CartItem[] = emptyCartItems;
+let hasHydratedFromStorage = false;
+
+function emitCartChange() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(cartStoreEvent));
+}
+
+function sanitizeCartItems(items: Array<{ slug?: string; quantity?: number }>) {
+  return items
+    .filter((item) => typeof item.slug === "string" && typeof item.quantity === "number")
+    .map((item) => ({
+      slug: item.slug!,
+      quantity: Math.max(1, Math.min(10, Math.floor(item.quantity!))),
+    }))
+    .filter((item) => Boolean(getProductBySlug(item.slug)));
+}
 
 function readCartFromStorage(): CartItem[] {
   if (typeof window === "undefined") {
-    return [];
+    return emptyCartItems;
   }
 
   try {
     const raw = window.localStorage.getItem(cartStorageKey);
 
     if (!raw) {
-      return [];
+      return emptyCartItems;
     }
 
     const parsed = JSON.parse(raw) as {
@@ -62,37 +85,98 @@ function readCartFromStorage(): CartItem[] {
     };
 
     if (parsed.version !== 1 || !Array.isArray(parsed.items)) {
-      return [];
+      return emptyCartItems;
     }
 
-    return parsed.items
-      .filter((item) => typeof item.slug === "string" && typeof item.quantity === "number")
-      .map((item) => ({
-        slug: item.slug!,
-        quantity: Math.max(1, Math.min(10, Math.floor(item.quantity!))),
-      }))
-      .filter((item) => Boolean(getProductBySlug(item.slug)));
+    const sanitized = sanitizeCartItems(parsed.items);
+    return sanitized.length > 0 ? sanitized : emptyCartItems;
   } catch {
-    return [];
+    return emptyCartItems;
   }
 }
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => readCartFromStorage());
+function writeCartToStorage(items: CartItem[]) {
+  currentCartItems = items.length > 0 ? items : emptyCartItems;
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
+  if (typeof window !== "undefined") {
     window.localStorage.setItem(
       cartStorageKey,
       JSON.stringify({
         version: 1,
-        items,
+        items: currentCartItems,
       }),
     );
-  }, [items]);
+  }
+
+  emitCartChange();
+}
+
+function getCartSnapshot() {
+  return currentCartItems;
+}
+
+function getCartServerSnapshot() {
+  return emptyCartItems;
+}
+
+function syncCartStoreFromStorage() {
+  const nextItems = readCartFromStorage();
+
+  if (nextItems === currentCartItems) {
+    return;
+  }
+
+  const sameLength = nextItems.length === currentCartItems.length;
+  const sameEntries =
+    sameLength &&
+    nextItems.every(
+      (item, index) =>
+        item.slug === currentCartItems[index]?.slug &&
+        item.quantity === currentCartItems[index]?.quantity,
+    );
+
+  if (sameEntries) {
+    return;
+  }
+
+  currentCartItems = nextItems;
+  emitCartChange();
+}
+
+function subscribeToCartStore(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  const handleChange = () => {
+    syncCartStoreFromStorage();
+    onStoreChange();
+  };
+
+  window.addEventListener("storage", handleChange);
+  window.addEventListener(cartStoreEvent, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", handleChange);
+    window.removeEventListener(cartStoreEvent, onStoreChange);
+  };
+}
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const items = useSyncExternalStore(
+    subscribeToCartStore,
+    getCartSnapshot,
+    getCartServerSnapshot,
+  );
+
+  useEffect(() => {
+    if (hasHydratedFromStorage) {
+      return;
+    }
+
+    hasHydratedFromStorage = true;
+    syncCartStoreFromStorage();
+  }, []);
 
   const lines = useMemo<CartLine[]>(() => {
     return items.flatMap((item) => {
@@ -134,28 +218,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       subtotalLabel: formatPrice(subtotal, "USD"),
       addItem: (slug, quantity = 1) => {
         startTransition(() => {
-          setItems((current) => {
-            const existing = current.find((item) => item.slug === slug);
+          const existing = items.find((item) => item.slug === slug);
 
-            if (!existing) {
-              return [...current, { slug, quantity: Math.max(1, Math.min(10, quantity)) }];
-            }
+          if (!existing) {
+            writeCartToStorage([
+              ...items,
+              { slug, quantity: Math.max(1, Math.min(10, quantity)) },
+            ]);
+            return;
+          }
 
-            return current.map((item) =>
+          writeCartToStorage(
+            items.map((item) =>
               item.slug === slug
                 ? {
                     ...item,
                     quantity: Math.max(1, Math.min(10, item.quantity + quantity)),
                   }
                 : item,
-            );
-          });
+            ),
+          );
         });
       },
       updateQuantity: (slug, quantity) => {
         startTransition(() => {
-          setItems((current) =>
-            current.flatMap((item) => {
+          writeCartToStorage(
+            items.flatMap((item) => {
               if (item.slug !== slug) {
                 return [item];
               }
@@ -171,12 +259,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       },
       removeItem: (slug) => {
         startTransition(() => {
-          setItems((current) => current.filter((item) => item.slug !== slug));
+          writeCartToStorage(items.filter((item) => item.slug !== slug));
         });
       },
       clearCart: () => {
         startTransition(() => {
-          setItems([]);
+          writeCartToStorage(emptyCartItems);
         });
       },
     }),

@@ -28,6 +28,7 @@ export default async function ProductPage({
   }
 
   const relatedProducts = getRelatedProducts(product.slug, 3);
+  const flightSourceId = `flight-source-${product.slug}-detail`;
 
   return (
     <main id="main-content" className="px-4 pb-24 pt-8 sm:px-6 lg:px-10 lg:pb-32 lg:pt-14">
@@ -41,7 +42,10 @@ export default async function ProductPage({
 
         <section className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
           <Reveal className="grid gap-4 sm:gap-5">
-            <div className="luxury-photo-frame relative aspect-[0.82] overflow-hidden rounded-[1.55rem] border border-white/10 sm:aspect-[0.9] sm:rounded-[2rem]">
+            <div
+              className="luxury-photo-frame relative aspect-[0.82] overflow-hidden rounded-[1.55rem] border border-white/10 sm:aspect-[0.9] sm:rounded-[2rem]"
+              id={flightSourceId}
+            >
               <Image
                 alt={product.headline}
                 className="object-cover"
@@ -98,7 +102,12 @@ export default async function ProductPage({
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <AddToCartButton className="sm:flex-1" slug={product.slug} />
+              <AddToCartButton
+                className="sm:flex-1"
+                flightImageSrc={product.gallery[0]}
+                flightSourceId={flightSourceId}
+                slug={product.slug}
+              />
               <Link
                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 px-5 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition hover:border-[var(--color-border-strong)] hover:bg-white/6 sm:flex-1"
                 href="/checkout"
